@@ -1,4 +1,4 @@
-﻿namespace Console;
+﻿namespace Lookup;
 
 public class Trie
 {
@@ -6,7 +6,7 @@ public class Trie
 
     public Trie(string dictionaryFilePath)
     {
-        var allWords = new List<string?>();
+        var allWords = new List<string>();
         using (var streamReader = File.OpenText(dictionaryFilePath))
         {
             while (!streamReader.EndOfStream)
@@ -18,14 +18,14 @@ public class Trie
         InsertRange(allWords);
     }
 
-    public Trie(IEnumerable<string?> words)
+    public Trie(IEnumerable<string> words)
     {
         InsertRange(words);
     }
     
-    public Dictionary<string, string?[]> SolveRange(string[] words)
+    public Dictionary<string, string[]> SolveRange(string[] words)
     {
-        var dict = new Dictionary<string, string?[]>();
+        var dict = new Dictionary<string, string[]>();
         foreach (var word in words)
         {
             dict.Add(word, Solve(word));
@@ -34,14 +34,14 @@ public class Trie
         return dict;
     }
 
-    public string?[] Solve(string word)
+    public string[] Solve(string word)
     {
-        var foundWords = new List<string?>();
+        var foundWords = new List<string>();
         FindWords(Root, word, foundWords);
         return foundWords.ToArray();
     }
 
-    private static void FindWords(Node node, string inputWord, List<string?> wordsFound)
+    private static void FindWords(Node node, string inputWord, ICollection<string> wordsFound)
     {
         foreach (var edge in node.Edges)
         {
@@ -64,7 +64,7 @@ public class Trie
         }
     }
 
-    private void InsertRange(IEnumerable<string?> words)
+    private void InsertRange(IEnumerable<string> words)
     {
         foreach (var word in words)
         {
