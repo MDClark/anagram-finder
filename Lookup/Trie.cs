@@ -28,7 +28,8 @@ public class Trie
         var dict = new Dictionary<string, string[]>();
         foreach (var word in words)
         {
-            dict.Add(word, Solve(word));
+            var lower = word.Replace(" ", "").Trim().ToLower();
+            dict.Add(word, Solve(lower));
         }
 
         return dict;
