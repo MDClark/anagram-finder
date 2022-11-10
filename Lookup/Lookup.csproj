@@ -7,4 +7,10 @@
         <RootNamespace>Lookup</RootNamespace>
     </PropertyGroup>
 
+    <ItemGroup>
+        <None Include="$(SolutionDir)Data\**"
+              CopyToOutputDirectory="PreserveNewest"
+              LinkBase="Data\" />
+    </ItemGroup>
+
 </Project>
