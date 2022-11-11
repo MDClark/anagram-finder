@@ -8,9 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="$(SolutionDir)Data\**"
-              CopyToOutputDirectory="PreserveNewest"
-              LinkBase="Data\" />
+        <None Include="$(SolutionDir)Data\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Data\" />
+        <None Remove="..\Data\**" />
     </ItemGroup>
 
 </Project>
