@@ -35,8 +35,6 @@ public class DefinitionRetriever
 
         if (!response.IsSuccessStatusCode)
         {
-            definitions = Array.Empty<string>();
-            TryAddToCache(word, definitions);
             return false;
         }
         
