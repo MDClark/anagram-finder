@@ -17,11 +17,10 @@ var lookupNames = new[]
     "",
 };
 
-var solver = new Trie(dictionaryPath);
-var solvedDictionary = solver.SolveRange(lookupNames);
+var solved = new Trie(dictionaryPath).SolveRange(lookupNames);
 var definer = new DefinitionRetriever(dictionaryPath);
 
-foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Length / (double)sd.Key.Length))
+foreach (var (name, matchWords) in solved.OrderBy(sd => sd.Value.Length / (double)sd.Key.Length))
 {
     var matchWordsOrdered = matchWords.OrderByDescending(w => w.Length).ToArray();
     var matchWordsFound = 0;
