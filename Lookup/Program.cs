@@ -19,7 +19,7 @@ var lookupNames = new[]
 
 var solver = new Trie(dictionaryPath);
 var solvedDictionary = solver.SolveRange(lookupNames);
-var definer = new DefinitionRetriever(DictionaryName);
+var definer = new DefinitionRetriever(dictionaryPath);
 
 foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Length))
 {
