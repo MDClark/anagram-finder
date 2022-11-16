@@ -32,26 +32,32 @@ foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Lengt
     var longestWordLength = matchWords.Max(w => w.Length);
     var longestWords = matchWords.Where(w => w.Length == longestWordLength);
 
-    var topWords = matchWords.OrderByDescending(w => w.Length).Take(TopWordsToShow);
+    var matchWordsOrdered = matchWords.OrderByDescending(w => w.Length).ToArray();
 
     var sb = new StringBuilder();
     sb.AppendLine($"{name} ({matchWordCount} @ {matchWordsPerLetter:N2}) [{longestWordLength} - {string.Join(", ", longestWords)}]");
-    foreach (var topWord in topWords)
+
+
+    var topWordsFound = 0;
+    
+    for (var i = 0; topWordsFound <= TopWordsToShow; i++)
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, string.Format(DictionaryApiTemplate, topWord));
+        var matchWord = matchWordsOrdered[i];
+        var request = new HttpRequestMessage(HttpMethod.Get, string.Format(DictionaryApiTemplate, matchWord));
         var response = httpClient.Send(request);
 
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($"REMOVE {topWord}");
             continue;
         }
+
+        topWordsFound++;
         
         var content = await response.Content.ReadAsStringAsync();
         var dictionaryDefinitionResponse = JsonSerializer.Deserialize<Root[]>(content);
-        var definitionStrings = dictionaryDefinitionResponse.First().Meanings.SelectMany(m => m.Definitions).Select(d => $"" d.Definition);
+        var definitionStrings = dictionaryDefinitionResponse.First().Meanings.SelectMany(m => m.Definitions).Select(d => d.Definition);
         
-        sb.AppendLine($"\t{topWord} - {string.Join(" | ", definitionStrings)}");
+        sb.AppendLine($"\t{matchWord} - {string.Join(" | ", definitionStrings)}");
     }
 
     Console.WriteLine(sb.ToString());
