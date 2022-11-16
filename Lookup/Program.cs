@@ -3,11 +3,9 @@
 using System.Diagnostics;
 using System.Text;
 using Lookup;
-using System.Text.Json;
-using Lookup.Model;
+using Lookup.Cache;
 
 const int TopWordsToShow = 25;
-const string DictionaryApiTemplate = "https://api.dictionaryapi.dev/api/v2/entries/en/{0}";
 const string DictionaryFolder = "Data";
 const string DictionaryName = @"free-dictionary-api-list.txt";
 var executingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName);
@@ -21,8 +19,7 @@ var lookupNames = new[]
 
 var solver = new Trie(dictionaryPath);
 var solvedDictionary = solver.SolveRange(lookupNames);
-
-var httpClient = new HttpClient();
+var definer = new DefinitionRetriever(DictionaryName);
 
 foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Length))
 {
@@ -37,25 +34,16 @@ foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Lengt
     var sb = new StringBuilder();
     sb.AppendLine($"{name} ({matchWordCount} @ {matchWordsPerLetter:N2}) [{longestWordLength} - {string.Join(", ", longestWords)}]");
 
-
     var topWordsFound = 0;
     
     for (var i = 0; topWordsFound <= TopWordsToShow; i++)
     {
         var matchWord = matchWordsOrdered[i];
-        var request = new HttpRequestMessage(HttpMethod.Get, string.Format(DictionaryApiTemplate, matchWord));
-        var response = httpClient.Send(request);
-
-        if (!response.IsSuccessStatusCode)
+        if (!definer.TryGetDefinitions(matchWord, out var definitionStrings))
         {
             continue;
         }
-
         topWordsFound++;
-        
-        var content = await response.Content.ReadAsStringAsync();
-        var dictionaryDefinitionResponse = JsonSerializer.Deserialize<Root[]>(content);
-        var definitionStrings = dictionaryDefinitionResponse.First().Meanings.SelectMany(m => m.Definitions).Select(d => d.Definition);
         
         sb.AppendLine($"\t{matchWord} - {string.Join(" | ", definitionStrings)}");
     }
