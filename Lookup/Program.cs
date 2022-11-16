@@ -21,32 +21,34 @@ var solver = new Trie(dictionaryPath);
 var solvedDictionary = solver.SolveRange(lookupNames);
 var definer = new DefinitionRetriever(dictionaryPath);
 
-foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Length))
+foreach (var (name, matchWords) in solvedDictionary.OrderBy(sd => sd.Value.Length / (double)sd.Key.Length))
 {
-    var matchWordCount = matchWords.Length;
-    var matchWordsPerLetter = matchWordCount / (double)name.Length;
-
-    var longestWordLength = matchWords.Max(w => w.Length);
-    var longestWords = matchWords.Where(w => w.Length == longestWordLength);
-
     var matchWordsOrdered = matchWords.OrderByDescending(w => w.Length).ToArray();
-
-    var sb = new StringBuilder();
-    sb.AppendLine($"{name} ({matchWordCount} @ {matchWordsPerLetter:N2}) [{longestWordLength} - {string.Join(", ", longestWords)}]");
-
-    var topWordsFound = 0;
-    
-    for (var i = 0; topWordsFound <= TopWordsToShow; i++)
+    var matchWordsFound = 0;
+    var topWords = new Dictionary<string, string[]>();
+    for (var i = 0; matchWordsFound <= TopWordsToShow; i++)
     {
         var matchWord = matchWordsOrdered[i];
         if (!definer.TryGetDefinitions(matchWord, out var definitionStrings))
         {
             continue;
         }
-        topWordsFound++;
-        
-        sb.AppendLine($"\t{matchWord} - {string.Join(" | ", definitionStrings)}");
-    }
 
+        matchWordsFound++;
+        topWords.Add(matchWord, definitionStrings);
+    }
+    
+    var matchWordCount = matchWords.Length;
+    var matchWordsPerLetter = matchWordCount / (double)name.Length;
+    
+    var longestWordLength = topWords.Max(w => w.Key.Length);
+    var longestWords = topWords.Where(w => w.Key.Length == longestWordLength).Select(w => w.Key);
+
+    var sb = new StringBuilder();
+    sb.AppendLine($"{name} ({matchWordCount} @ {matchWordsPerLetter:N2}) [{longestWordLength} - {string.Join(", ", longestWords)}]");
+    foreach (var topWord in topWords)
+    {
+        sb.AppendLine($"\t{topWord.Key} - {string.Join(" | ", topWord.Value)}");
+    }
     Console.WriteLine(sb.ToString());
 }
