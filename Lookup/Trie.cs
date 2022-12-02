@@ -1,11 +1,17 @@
-﻿namespace Lookup;
+﻿using Microsoft.Extensions.Logging;
+
+namespace Lookup;
 
 public class Trie
 {
     public readonly Node Root = new();
+    private ILogger<Program> _logger;
 
     public Trie(string dictionaryFilePath)
     {
+        _logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<Program>();
+        
+        _logger.LogInformation("Reading dictionary file...");
         var allWords = new List<string>();
         using (var streamReader = File.OpenText(dictionaryFilePath))
         {
@@ -15,6 +21,7 @@ public class Trie
             }
         }
 
+        _logger.LogInformation("Building trie from dictionary...");
         InsertRange(allWords);
     }
 
@@ -25,6 +32,8 @@ public class Trie
     
     public Dictionary<string, string[]> SolveRange(string[] words)
     {
+        _logger.LogInformation("Solving acronyms...");
+
         var dict = new Dictionary<string, string[]>();
         foreach (var word in words)
         {

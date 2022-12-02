@@ -1,31 +1,33 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using Lookup;
 using Lookup.Cache;
+using Microsoft.Extensions.Logging;
 
-const int TopWordsToShow = 25;
-const string DictionaryFolder = "Data";
-const string DictionaryName = @"free-dictionary-api-list.txt";
-var executingDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule!.FileName);
-
-var dictionaryPath = Path.Combine(executingDirectory, DictionaryFolder, DictionaryName);
+var logger = LoggerFactory.Create(builder => builder.AddConsole()).CreateLogger<Program>();
 
 var lookupNames = new[]
 {
     "",
 };
 
-var solved = new Trie(dictionaryPath).SolveRange(lookupNames);
-var definer = new DefinitionRetriever(dictionaryPath);
+var runConfiguration = new RunConfiguration(lookupNames);
 
+logger.LogInformation("Running acronym search with with the following settings:");
+logger.LogInformation(runConfiguration.ToString());
+
+var trie = new Trie(runConfiguration.DictionaryPath);
+var definer = new DefinitionRetriever(runConfiguration.DictionaryPath);
+var solved = trie.SolveRange(lookupNames);
+
+logger.LogInformation("Starting definition lookup...");
+var sb = new StringBuilder();
 foreach (var (name, matchWords) in solved.OrderBy(sd => sd.Value.Length / (double)sd.Key.Length))
 {
+    logger.LogInformation("Looking up definitions for {0}...", name);
     var matchWordsOrdered = matchWords.OrderByDescending(w => w.Length).ToArray();
     var matchWordsFound = 0;
     var topWords = new Dictionary<string, string[]>();
-    for (var i = 0; matchWordsFound <= TopWordsToShow; i++)
+    for (var i = 0; matchWordsFound <= runConfiguration.TopWordsToShow; i++)
     {
         var matchWord = matchWordsOrdered[i];
         if (!definer.TryGetDefinitions(matchWord, out var definitionStrings))
@@ -36,18 +38,22 @@ foreach (var (name, matchWords) in solved.OrderBy(sd => sd.Value.Length / (doubl
         matchWordsFound++;
         topWords.Add(matchWord, definitionStrings);
     }
-    
+
     var matchWordCount = matchWords.Length;
     var matchWordsPerLetter = matchWordCount / (double)name.Length;
-    
+
     var longestWordLength = topWords.Max(w => w.Key.Length);
     var longestWords = topWords.Where(w => w.Key.Length == longestWordLength).Select(w => w.Key);
 
-    var sb = new StringBuilder();
     sb.AppendLine($"{name} ({matchWordCount} @ {matchWordsPerLetter:N2}) [{longestWordLength} - {string.Join(", ", longestWords)}]");
     foreach (var topWord in topWords)
     {
         sb.AppendLine($"\t{topWord.Key} - {string.Join(" | ", topWord.Value)}");
     }
-    Console.WriteLine(sb.ToString());
+}
+
+logger.LogInformation("Writing results file...");
+using (var writer = new StreamWriter("team-output.txt"))
+{
+    writer.Write(sb);
 }
