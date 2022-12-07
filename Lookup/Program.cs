@@ -27,7 +27,7 @@ foreach (var (name, matchWords) in solved.OrderBy(sd => sd.Value.Length / (doubl
     var matchWordsOrdered = matchWords.OrderByDescending(w => w.Length).ToArray();
     var matchWordsFound = 0;
     var topWords = new Dictionary<string, string[]>();
-    for (var i = 0; matchWordsFound <= runConfiguration.TopWordsToShow; i++)
+    for (var i = 0; matchWordsFound < runConfiguration.TopWordsToShow && i < matchWordsOrdered.Length; i++)
     {
         var matchWord = matchWordsOrdered[i];
         if (!definer.TryGetDefinitions(matchWord, out var definitionStrings))
@@ -52,8 +52,9 @@ foreach (var (name, matchWords) in solved.OrderBy(sd => sd.Value.Length / (doubl
     }
 }
 
-logger.LogInformation("Writing results file...");
+
 using (var writer = new StreamWriter("team-output.txt"))
 {
+    logger.LogInformation("Writing results file to {0}...", ((FileStream)writer.BaseStream).Name);
     writer.Write(sb);
 }
