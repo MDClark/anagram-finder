@@ -16,11 +16,11 @@ logger.LogInformation("Running acronym search with with the following settings:"
 logger.LogInformation(runConfiguration.ToString());
 
 var trie = new Trie(runConfiguration.DictionaryPath);
-var definer = new DefinitionRetriever(runConfiguration.DictionaryPath);
 var solved = trie.SolveRange(lookupNames);
 
 logger.LogInformation("Starting definition lookup...");
 var sb = new StringBuilder();
+var definer = new DefinitionRetriever(runConfiguration.DictionaryPath);
 foreach (var (name, matchWords) in solved.OrderBy(sd => sd.Value.Length / (double)sd.Key.Length))
 {
     logger.LogInformation("Looking up definitions for {0}...", name);
